@@ -1,0 +1,7 @@
+{
+  "schemaVersion": "1",
+  "retrievedAt": "2026-07-15T00:00:00Z",
+  "coverage": { "from": "2024-07-16", "to": "2026-07-15" },
+  "sources": [{ "family": "CAIS EOP fixture", "url": "local://deterministic-review-fixture", "sha256": "embedded:tenderlens-fixture-v1" }],
+  "configuration": { "windowMonths": 24, "minimumPeerContracts": 30, "minimumPeerSuppliers": 10, "displayCurrency": "BGN", "valueBandsVersion": "fixture-1" }
+}

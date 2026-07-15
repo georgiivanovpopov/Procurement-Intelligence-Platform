@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+src/frontend/node_modules/
+src/frontend/dist/
+src/backend/TenderLens.Api/wwwroot/
+data/snapshot/
+*.db
+.packages/
+.agents/
+_bmad/
+_bmad-output/
+api-smoke*.log

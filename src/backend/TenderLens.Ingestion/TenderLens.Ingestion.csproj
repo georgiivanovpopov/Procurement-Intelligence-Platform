@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\TenderLens.Data\TenderLens.Data.csproj" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.10" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,9 @@
+export type Meta={snapshotId:string;snapshotDate:string;observationStart:string;observationEnd:string;sourceFamilies:string[];schemaVersion:string;detectorVersion:string};
+export type Metric={label:string;value:number|null;unit:string|null;state:string;window:string};
+export type Signal={key:string;name:string;status:string;explanation:string;observedValue:string;benchmark:string;evidenceCount:number};
+export type Profile={eik:string;name:string;scopeLabel:string;coverage:Meta;metrics:Metric[];signals:Signal[]};
+export type Money={amount:number;currency:string};
+export type Evidence={recordId:string;buyer:string;subject:string;cpv:string;awardDate:string;value:Money;contribution:string};
+export type Detail={key:string;name:string;status:string;observedFact:string;trigger:string;formula:string;threshold:string;peerDefinition:string;peerSize:number|null;observationWindow:string;limitations:string;version:string;evidence:Evidence[]};
+export type Field={label:string;sourceValue:string|null;tenderLensUse:string;state:string};
+export type RecordView={recordId:string;supplierEik:string;buyer:string;subject:string;cpv:string;awardDate:string;originalValue:Money;publicUrl:string|null;fields:Field[];amendments:{id:string;date:string;description:string;valueDelta:Money|null}[]};

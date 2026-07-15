@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: tenderlens
+    runtime: docker
+    plan: free
+    healthCheckPath: /health/ready
+    autoDeploy: false
