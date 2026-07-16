@@ -75,19 +75,19 @@ static class FixtureData
 
     private static SourceRecord Record(string id, string buyer, string subject, string cpv, string date, decimal amount, int amendmentCount)
         => new(id, Eik, buyer, subject, cpv, date, new Money(amount, "BGN"), $"https://app.eop.bg/today/{Uri.EscapeDataString(id)}",
-        [new("Awarded value", amount.ToString("0.00"), "Normalized decimal; original currency retained"), new("CPV", cpv, "Peer-group classification")],
-        Enumerable.Range(1, amendmentCount).Select(i => new Amendment($"{id}-A{i}", date, $"Amendment {i}", i == 1 ? new Money(amount * .08m, "BGN") : null)).ToList());
+        [new("Възложена стойност", amount.ToString("0.00"), "Нормализирано десетично число; оригиналната валута е запазена"), new("CPV", cpv, "Класификация за групата за сравнение")],
+        Enumerable.Range(1, amendmentCount).Select(i => new Amendment($"{id}-A{i}", date, $"Изменение {i}", i == 1 ? new Money(amount * .08m, "BGN") : null)).ToList());
 
     public static List<SupplierProfile> Profiles(SnapshotMeta meta, List<SourceRecord> records)
     {
         var signalSummaries = Signals(records).Where(x => x.Eik == Eik).Select(x => new SignalSummary(x.Signal.Key, x.Signal.Name, x.Signal.Status, x.Signal.ObservedFact, x.Signal.ObservedFact, x.Signal.PeerDefinition, x.Signal.Evidence.Count)).ToList();
         return
         [
-            new(Eik, "ТЕНДЪР ЛЕНС ДЕМО ООД", "Profile derived only from public-procurement data", meta,
-                [new("Total awarded value", records.Sum(r => r.OriginalValue.Amount), "BGN", "available", "24 months"), new("Contracts", records.Count, "records", "available", "24 months"), new("Distinct buyers", records.Select(r => r.Buyer).Distinct().Count(), "buyers", "available", "24 months"), new("Amendments", records.Sum(r => r.Amendments.Count), "amendments", "available", "24 months")], signalSummaries),
-            new(SparseEik, "ДЕМО ДОСТАВЧИК С ОГРАНИЧЕНИ ДАННИ", "Profile derived only from public-procurement data", meta,
-                [new("Total awarded value", null, "BGN", "insufficient", "24 months"), new("Contracts", 1, "record", "available", "24 months")],
-                CoreKeys().Select(k => new SignalSummary(k.Key, k.Name, "Insufficient data", "Not enough eligible records.", "Unavailable", "Minimum eligibility not met.", 0)).ToList())
+            new(Eik, "ТЕНДЪР ЛЕНС ДЕМО ООД", "Профил, изведен само от данни за обществени поръчки", meta,
+                [new("Обща възложена стойност", records.Sum(r => r.OriginalValue.Amount), "BGN", "available", "24 месеца"), new("Договори", records.Count, "записа", "available", "24 месеца"), new("Различни възложители", records.Select(r => r.Buyer).Distinct().Count(), "възложители", "available", "24 месеца"), new("Изменения", records.Sum(r => r.Amendments.Count), "изменения", "available", "24 месеца")], signalSummaries),
+            new(SparseEik, "ДЕМО ДОСТАВЧИК С ОГРАНИЧЕНИ ДАННИ", "Профил, изведен само от данни за обществени поръчки", meta,
+                [new("Обща възложена стойност", null, "BGN", "insufficient", "24 месеца"), new("Договори", 1, "запис", "available", "24 месеца")],
+                CoreKeys().Select(k => new SignalSummary(k.Key, k.Name, "Insufficient data", "Няма достатъчно допустими записи.", "Не е налично", "Минималните изисквания за допустимост не са изпълнени.", 0)).ToList())
         ];
     }
 
@@ -98,11 +98,11 @@ static class FixtureData
         var share = capital.Sum(r => r.OriginalValue.Amount) / total;
         return
         [
-            (Eik, Detail(SignalKeys.BuyerConcentration, "Buyer concentration", DetectorPolicy.BuyerConcentration(records.Count, share), $"Largest buyer accounts for {share:P0} of awarded value.", "At least 5 contracts and share ≥ 70%", "largest buyer awarded value / total awarded value", "70%", "Supplier contracts in the 24-month window", null, "Concentration may be normal in specialized markets.", capital)),
-            (Eik, Detail(SignalKeys.RepeatedRelationship, "Repeated buyer–supplier relationship", DetectorPolicy.RepeatedRelationship(capital.Count, share, .95m), "Four awards are associated with the same buyer.", "≥3 awards, ≥50% value and ≥90th peer percentile", "pair value / supplier value", "90th percentile", "Comparable CPV/value-band contracts", 46, "Peer comparison uses deterministic fixture peers.", capital)),
-            (Eik, Detail(SignalKeys.SingleBidExposure, "Single-bid exposure", DetectorPolicy.SingleBid(records.Count, .4m, .80m), "Two of five eligible awards have one bid.", "≥50% single-bid and ≥90th peer percentile", "single-bid awards / eligible awards", "50% + 90th percentile", "Awards with trustworthy bid semantics", 51, "Bid semantics vary by procedure.", records.Take(2).ToList())),
-            (Eik, Detail(SignalKeys.ValueOutlier, "Contract-value outlier", DetectorPolicy.ValueOutlier(.99m, null), "One contract is above the peer 99th percentile.", "≥99th percentile or robust z-score ≥3.5", "robust peer percentile", "99th percentile", "CPV 45 / configured value band", 64, "Fixture peers demonstrate the calculation contract.", [records[0]])),
-            (Eik, Detail(SignalKeys.AmendmentIntensity, "Amendment intensity", DetectorPolicy.AmendmentIntensity(3, null), "One contract has three amendments.", "≥3 amendments or reliable growth ≥20%", "count(amendments)", "3 amendments", "Supplier contracts with amendment records", null, "Missing amendment values are excluded from growth.", [records[2]]))
+            (Eik, Detail(SignalKeys.BuyerConcentration, "Концентрация при възложител", DetectorPolicy.BuyerConcentration(records.Count, share), $"Най-големият възложител представлява {share:P0} от възложената стойност.", "Поне 5 договора и дял ≥ 70%", "стойност при най-големия възложител / обща възложена стойност", "70%", "Договори на доставчика в 24-месечния период", null, "Концентрацията може да е нормална за специализирани пазари.", capital)),
+            (Eik, Detail(SignalKeys.RepeatedRelationship, "Повтаряща се връзка възложител–доставчик", DetectorPolicy.RepeatedRelationship(capital.Count, share, .95m), "Четири възлагания са свързани с един и същ възложител.", "≥3 възлагания, ≥50% от стойността и ≥90-и персентил", "стойност на двойката / стойност на доставчика", "90-и персентил", "Сравними договори по CPV и стойностен диапазон", 46, "Сравнението използва детерминистични примерни групи.", capital)),
+            (Eik, Detail(SignalKeys.SingleBidExposure, "Участие с една оферта", DetectorPolicy.SingleBid(records.Count, .4m, .80m), "Две от пет допустими възлагания са с една оферта.", "≥50% с една оферта и ≥90-и персентил", "възлагания с една оферта / допустими възлагания", "50% + 90-и персентил", "Възлагания с надеждно определен брой оферти", 51, "Значението на броя оферти варира според процедурата.", records.Take(2).ToList())),
+            (Eik, Detail(SignalKeys.ValueOutlier, "Отклонение в стойността на договор", DetectorPolicy.ValueOutlier(.99m, null), "Един договор е над 99-ия персентил на групата.", "≥99-и персентил или устойчив z-резултат ≥3.5", "устойчив персентил в групата", "99-и персентил", "CPV 45 / конфигуриран стойностен диапазон", 64, "Примерните групи демонстрират договора за изчисление.", [records[0]])),
+            (Eik, Detail(SignalKeys.AmendmentIntensity, "Интензивност на измененията", DetectorPolicy.AmendmentIntensity(3, null), "Един договор има три изменения.", "≥3 изменения или надежден ръст ≥20%", "брой(изменения)", "3 изменения", "Договори на доставчика с данни за изменения", null, "Липсващите стойности на измененията не участват в изчисляването на ръста.", [records[2]]))
         ];
     }
 
@@ -111,7 +111,7 @@ static class FixtureData
 
     private static (string Key, string Name)[] CoreKeys() =>
     [
-        (SignalKeys.BuyerConcentration, "Buyer concentration"), (SignalKeys.RepeatedRelationship, "Repeated buyer–supplier relationship"),
-        (SignalKeys.SingleBidExposure, "Single-bid exposure"), (SignalKeys.ValueOutlier, "Contract-value outlier"), (SignalKeys.AmendmentIntensity, "Amendment intensity")
+        (SignalKeys.BuyerConcentration, "Концентрация при възложител"), (SignalKeys.RepeatedRelationship, "Повтаряща се връзка възложител–доставчик"),
+        (SignalKeys.SingleBidExposure, "Участие с една оферта"), (SignalKeys.ValueOutlier, "Отклонение в стойността на договор"), (SignalKeys.AmendmentIntensity, "Интензивност на измененията")
     ];
 }
