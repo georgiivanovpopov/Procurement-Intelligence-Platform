@@ -49,7 +49,7 @@ pnpm run build
 
 ## Deployment
 
-The included `Dockerfile` builds the frontend, imports the official CAIS EOP OCDS resources, publishes the ASP.NET Core API, and serves the React application from one container. `render.yaml` targets Render's free web-service plan.
+The included `Dockerfile` builds the frontend, expands the validated immutable OCDS snapshot, publishes the ASP.NET Core API, and serves the React application from one container. `render.yaml` targets Render's free web-service plan. The snapshot is refreshed by running the importer outside Render because the official portal rejects requests from some cloud build IPs.
 
 ## Data boundary
 
