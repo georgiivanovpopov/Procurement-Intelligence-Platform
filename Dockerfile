@@ -9,7 +9,7 @@ RUN pnpm run build
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY . .
-RUN dotnet restore TenderLens.slnx --configfile NuGet.Config && dotnet run --project src/backend/TenderLens.Ingestion -- /tmp/tenderlens.db data/manifests/fixture-manifest.json && dotnet publish src/backend/TenderLens.Api -c Release -o /app/publish
+RUN dotnet restore TenderLens.slnx --configfile NuGet.Config && dotnet run --project src/backend/TenderLens.Ingestion -- /tmp/tenderlens.db data/manifests/ocds-live-manifest.json && dotnet publish src/backend/TenderLens.Api -c Release -o /app/publish
 RUN cp /tmp/tenderlens.db /app/publish/tenderlens.db
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0

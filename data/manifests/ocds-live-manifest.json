@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "1",
+  "mode": "ocdsPortal",
+  "catalogUrl": "https://data.egov.bg/data?search=OCDS&format%5B0%5D=json",
+  "sources": [{ "family": "АОП / ЦАИС ЕОП OCDS", "url": "https://data.egov.bg", "license": "public-open-data" }]
+}

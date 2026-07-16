@@ -2,7 +2,7 @@
 
 TenderLens is an explainable anomaly-detection demo for Bulgarian public procurement. Enter a Bulgarian company EIK to inspect a procurement-derived supplier profile, five deterministic signals, their evidence, peer context, and the source records behind them.
 
-The repository currently uses a deterministic synthetic CAIS EOP-shaped fixture. It demonstrates the complete product journey without making claims about real companies.
+The deployed container builds an immutable snapshot from the publicly discoverable OCDS JSON resources published by the Bulgarian Public Procurement Agency. A deterministic synthetic fixture remains available for fast local development and tests.
 
 ## Requirements
 
@@ -49,8 +49,8 @@ pnpm run build
 
 ## Deployment
 
-The included `Dockerfile` builds the frontend, creates the deterministic snapshot, publishes the ASP.NET Core API, and serves the React application from one container. `render.yaml` targets Render's free web-service plan.
+The included `Dockerfile` builds the frontend, imports the official CAIS EOP OCDS resources, publishes the ASP.NET Core API, and serves the React application from one container. `render.yaml` targets Render's free web-service plan.
 
 ## Data boundary
 
-All displayed fixture values are synthetic. Before using TenderLens for real procurement analysis, replace the fixture acquisition manifest and ingestion input with checksum-bound public CAIS EOP exports while preserving provenance and snapshot immutability.
+The public deployment covers suppliers present in the OCDS award/contract releases currently published by AOP. It is not a Commercial Register and does not contain companies without procurement records. Missing or semantically unreliable OCDS fields are shown as insufficient data rather than inferred.

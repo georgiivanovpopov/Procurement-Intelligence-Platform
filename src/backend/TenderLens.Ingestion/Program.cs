@@ -11,6 +11,11 @@ using var manifest = JsonDocument.Parse(manifestBytes);
 var root = manifest.RootElement;
 if (root.GetProperty("schemaVersion").GetString() != "1" || root.GetProperty("sources").GetArrayLength() == 0)
     throw new InvalidDataException("Unsupported or empty acquisition manifest.");
+if (root.TryGetProperty("mode", out var mode) && mode.GetString() == "ocdsPortal")
+{
+    await OcdsImporter.PublishAsync(output, root, manifestBytes);
+    return;
+}
 var coverage = root.GetProperty("coverage");
 var sources = root.GetProperty("sources").EnumerateArray().Select(x => x.GetProperty("family").GetString()!).ToArray();
 Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(output))!);
