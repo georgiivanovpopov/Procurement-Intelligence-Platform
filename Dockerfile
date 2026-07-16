@@ -18,5 +18,7 @@ COPY --from=build /app/publish .
 COPY --from=web /src/dist ./wwwroot
 ENV ASPNETCORE_URLS=http://0.0.0.0:10000
 ENV SnapshotPath=/app/tenderlens.db
+ENV DOTNET_USE_POLLING_FILE_WATCHER=1
+ENV DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE=false
 EXPOSE 10000
 ENTRYPOINT ["dotnet", "TenderLens.Api.dll"]
