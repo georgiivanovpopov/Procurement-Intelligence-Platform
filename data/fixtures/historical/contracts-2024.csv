@@ -1,0 +1,3 @@
+contract_id;supplier_eik;supplier_name;buyer;subject;cpv;award_date;amount;currency;revision_date;public_url
+C-4;131106522;ПРОСВЕТА-СОФИЯ АД;Министерство на образованието;Дигитални учебници — корекция;22110000;14.05.2023;4500;BGN;01.02.2024;https://data.egov.bg/data/resourceView/dcd45fa9-eaec-4ee9-a908-054fada944b1
+C-5;131106522;ПРОСВЕТА-СОФИЯ АД;Община София;Библиотечни книги;22110000;20.06.2024;;BGN;21.06.2024;https://data.egov.bg/data/resourceView/dcd45fa9-eaec-4ee9-a908-054fada944b1

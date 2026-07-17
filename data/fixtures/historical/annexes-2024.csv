@@ -1,0 +1,4 @@
+contract_id;amendment_id;amendment_date;description;amount_delta;currency
+C-4;A-1;01.03.2024;Удължаване на срока;;BGN
+C-4;A-2;01.04.2024;Промяна на количества;250;BGN
+C-4;A-3;01.05.2024;Нова крайна дата;;BGN

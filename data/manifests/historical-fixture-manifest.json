@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1",
+  "mode": "historicalBackfill",
+  "resources": [
+    { "id": "fixture-contracts-2020", "family": "АОП / ЦАИС ЕОП CSV", "kind": "contracts", "year": 2020, "url": "https://data.egov.bg/resource/download/fdcc0b4d-f0f6-44f4-b917-638376d1fcf1/csv", "localPath": "../fixtures/historical/contracts-2020.csv", "retrievedAt": "2026-07-17T00:00:00Z", "bytes": 349, "sha256": "65845c50892c77895402724c5841fcc54b269a3db851c2980f69098c641308c2" },
+    { "id": "fixture-contracts-2021", "family": "АОП / ЦАИС ЕОП CSV", "kind": "contracts", "year": 2021, "url": "https://data.egov.bg/resource/download/ec252e14-71e9-4448-8227-7cae01caada9/csv", "localPath": "../fixtures/historical/contracts-2021.csv", "retrievedAt": "2026-07-17T00:00:00Z", "bytes": 361, "sha256": "6697344aa48853d0b443998468a1cdca4e74b0f5bc313f598b58b64b60b57700" },
+    { "id": "fixture-contracts-2022", "family": "АОП / ЦАИС ЕОП CSV", "kind": "contracts", "year": 2022, "url": "https://data.egov.bg/resource/download/03e63b8c-c0e4-4e44-a777-3a751c3f735d/csv", "localPath": "../fixtures/historical/contracts-2022.csv", "retrievedAt": "2026-07-17T00:00:00Z", "bytes": 340, "sha256": "e4e3ce272cc75a5037b82959f9e97fc7437eb3dedb15c5f2f44da43e314fdd84" },
+    { "id": "fixture-contracts-2023", "family": "АОП / ЦАИС ЕОП CSV", "kind": "contracts", "year": 2023, "url": "https://data.egov.bg/resource/download/0809e6c3-90b2-4fcd-889c-9130f8dabfbe/csv", "localPath": "../fixtures/historical/contracts-2023.csv", "retrievedAt": "2026-07-17T00:00:00Z", "bytes": 375, "sha256": "654eef67dfe7501aef5ff367e5293d550769bd23c5c18c7a64bfe5eadff08d9d" },
+    { "id": "fixture-contracts-2024", "family": "АОП / РОП CSV", "kind": "contracts", "year": 2024, "url": "https://data.egov.bg/resource/download/dcd45fa9-eaec-4ee9-a908-054fada944b1/csv", "localPath": "../fixtures/historical/contracts-2024.csv", "retrievedAt": "2026-07-17T00:00:00Z", "bytes": 603, "sha256": "af95e708b6182c12569efca955298fe4ab6ffc022e2186f379dfaf1caadc4737" },
+    { "id": "fixture-contracts-2025", "family": "АОП / РОП CSV", "kind": "contracts", "year": 2025, "url": "https://data.egov.bg/resource/download/94c99c57-a07b-4838-aba2-ab085e247aca/csv", "localPath": "../fixtures/historical/contracts-2025.csv", "retrievedAt": "2026-07-17T00:00:00Z", "bytes": 334, "sha256": "c27b932b851c0f4db3d5c62cb595c93cb88820cb4ecbe7710158f8518c5031b8" },
+    { "id": "fixture-annexes-2024", "family": "АОП / РОП CSV", "kind": "amendments", "year": 2024, "url": "https://data.egov.bg/resource/download/75eecda0-2313-4301-9669-1c8421cc48e0/csv", "localPath": "../fixtures/historical/annexes-2024.csv", "retrievedAt": "2026-07-17T00:00:00Z", "bytes": 258, "sha256": "8ca6912076fe5e839aa7130dbf195a70e97369355d8a05227aaf78514cbddd6e" }
+  ]
+}

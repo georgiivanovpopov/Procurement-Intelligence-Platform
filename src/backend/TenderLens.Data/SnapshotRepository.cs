@@ -24,7 +24,7 @@ public sealed class SnapshotRepository(string databasePath)
 
     public bool IsReady()
     {
-        try { return GetMeta().SchemaVersion == "1"; }
+        try { return GetMeta().SchemaVersion is "1" or "2"; }
         catch { return false; }
     }
 

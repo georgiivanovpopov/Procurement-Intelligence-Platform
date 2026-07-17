@@ -10,7 +10,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY . .
 RUN dotnet restore TenderLens.slnx --configfile NuGet.Config && dotnet publish src/backend/TenderLens.Api -c Release -o /app/publish
-RUN gzip -dc data/releases/tenderlens-ocds.db.gz > /app/publish/tenderlens.db
+RUN echo "1f73273c713e3e94f362db727a9c240ab12771541c90b05dd450535b69d553f0  data/releases/tenderlens-historical.db.gz" | sha256sum -c -
+RUN gzip -dc data/releases/tenderlens-historical.db.gz > /app/publish/tenderlens.db
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app

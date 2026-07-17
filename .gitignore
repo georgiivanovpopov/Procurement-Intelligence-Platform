@@ -4,6 +4,7 @@ src/frontend/node_modules/
 src/frontend/dist/
 src/backend/TenderLens.Api/wwwroot/
 data/snapshot/
+data/raw/
 *.db
 .packages/
 .agents/

@@ -7,10 +7,23 @@ using TenderLens.Data;
 var output = args.Length > 0 ? args[0] : Path.Combine("data", "snapshot", "tenderlens.db");
 var manifestPath = args.Length > 1 ? args[1] : Path.Combine("data", "manifests", "fixture-manifest.json");
 var manifestBytes = File.ReadAllBytes(manifestPath);
-using var manifest = JsonDocument.Parse(manifestBytes);
+var manifestJson = manifestBytes.AsMemory();
+if (manifestBytes.AsSpan().StartsWith(Encoding.UTF8.Preamble))
+    manifestJson = manifestJson[Encoding.UTF8.Preamble.Length..];
+using var manifest = JsonDocument.Parse(manifestJson);
 var root = manifest.RootElement;
-if (root.GetProperty("schemaVersion").GetString() != "1" || root.GetProperty("sources").GetArrayLength() == 0)
-    throw new InvalidDataException("Unsupported or empty acquisition manifest.");
+if (root.GetProperty("schemaVersion").GetString() != "1")
+    throw new InvalidDataException("Unsupported acquisition manifest schema.");
+var manifestMode = root.TryGetProperty("mode", out var configuredMode) ? configuredMode.GetString() : null;
+if (manifestMode == "historicalBackfill")
+{
+    if (!root.TryGetProperty("resources", out var historicalResources) || historicalResources.GetArrayLength() == 0)
+        throw new InvalidDataException("Historical acquisition manifest has no resources.");
+    await HistoricalImporter.PublishAsync(output, manifestPath, root, manifestBytes);
+    return;
+}
+if (!root.TryGetProperty("sources", out var configuredSources) || configuredSources.GetArrayLength() == 0)
+    throw new InvalidDataException("Acquisition manifest has no sources.");
 if (root.TryGetProperty("mode", out var mode) && mode.GetString() == "ocdsPortal")
 {
     await OcdsImporter.PublishAsync(output, root, manifestBytes);

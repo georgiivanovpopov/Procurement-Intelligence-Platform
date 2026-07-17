@@ -1,0 +1,11 @@
+{
+  "snapshotId": "8e651f9a0dbc8c13",
+  "observationStart": "2020-01-01",
+  "observationEnd": "2026-06-30",
+  "suppliers": 12994,
+  "records": 134490,
+  "snapshotBytes": 890134528,
+  "snapshotSha256": "21e99d86fd551f8bc788e04b43ee28685f55503d56685e860626742ce31efb6e",
+  "archiveBytes": 63365029,
+  "archiveSha256": "1f73273c713e3e94f362db727a9c240ab12771541c90b05dd450535b69d553f0"
+}
