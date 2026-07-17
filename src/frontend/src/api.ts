@@ -1,2 +1,2 @@
 export class ApiError extends Error{constructor(public status:number,public detail:string){super(detail)}}
-export async function getJson<T>(path:string):Promise<T>{const response=await fetch(path);if(!response.ok){const body=await response.json().catch(()=>({detail:'Страницата не може да бъде заредена.'}));throw new ApiError(response.status,body.detail)}return response.json()}
+export async function getJson<T>(path:string,signal?:AbortSignal):Promise<T>{const response=await fetch(path,{signal});if(!response.ok){const body=await response.json().catch(()=>({detail:'Страницата не може да бъде заредена.'}));throw new ApiError(response.status,body.detail)}return response.json()}
