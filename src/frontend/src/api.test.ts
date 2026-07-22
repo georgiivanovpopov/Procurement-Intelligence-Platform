@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, getJson, postJson } from './api';
+import { ApiError, deleteJson, getJson, postJson } from './api';
 
 describe('getJson', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -38,6 +38,21 @@ describe('postJson', () => {
       method: 'POST',
       credentials: 'same-origin',
       headers: expect.objectContaining({ 'X-CSRF-TOKEN': 'csrf-token' })
+    }));
+  });
+});
+
+describe('deleteJson', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('protects unfollow with a fresh antiforgery token', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: 'csrf-token' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ following: false }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await deleteJson('/api/v1/community/users/auditor/follow');
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/v1/community/users/auditor/follow', expect.objectContaining({
+      method: 'DELETE', credentials: 'same-origin', headers: { 'X-CSRF-TOKEN': 'csrf-token' }
     }));
   });
 });

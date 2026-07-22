@@ -8,3 +8,7 @@ export type Detail={key:string;name:string;status:string;observedFact:string;tri
 export type Field={label:string;sourceValue:string|null;tenderLensUse:string;state:string};
 export type RecordView={recordId:string;supplierEik:string;buyer:string;subject:string;cpv:string;awardDate:string;originalValue:Money;publicUrl:string|null;fields:Field[];amendments:{id:string;date:string;description:string;valueDelta:Money|null}[]};
 export type Session={authenticated:boolean;username:string|null};
+export type CommunityPost={id:string;author:string;supplierEik:string;signalKey:string;signalName:string;body:string;createdAt:string;commentCount:number};
+export type CommunityComment={id:string;postId:string;author:string;body:string;createdAt:string};
+export type CommunityProfile={username:string;followers:number;following:number;isFollowing:boolean;posts:CommunityPost[]};
+export type CommunityPostDetail={post:CommunityPost;comments:CommunityComment[];commentPage:number;commentPageSize:number;commentTotal:number;commentTotalPages:number};

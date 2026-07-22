@@ -37,6 +37,9 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("auth", context =>
         RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ =>
             new FixedWindowRateLimiterOptions { PermitLimit = 10, Window = TimeSpan.FromMinutes(15), QueueLimit = 0, AutoReplenishment = true }));
+    options.AddPolicy("community", context =>
+        RateLimitPartition.GetFixedWindowLimiter(context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ =>
+            new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(15), QueueLimit = 0, AutoReplenishment = true }));
     options.OnRejected = async (context, token) =>
     {
         var retry = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var delay)
@@ -80,6 +83,7 @@ builder.Services.AddDataProtection()
     .SetApplicationName("TenderLens");
 builder.Services.AddSingleton(new SnapshotRepository(snapshotPath));
 builder.Services.AddSingleton(new AccountRepository(accountPath));
+builder.Services.AddSingleton(new CommunityRepository(accountPath));
 builder.Services.AddSingleton<IPasswordHasher<Account>, PasswordHasher<Account>>();
 
 var app = builder.Build();
@@ -102,9 +106,10 @@ app.Use(async (context, next) =>
 });
 app.Use(async (context, next) =>
 {
-    var allowedPost = context.Request.Method == "POST" &&
-        context.Request.Path.Value is "/api/v1/auth/register" or "/api/v1/auth/login" or "/api/v1/auth/logout";
-    if (context.Request.Method is not ("GET" or "HEAD") && !allowedPost)
+    var allowedMutation = context.Request.Method is "POST" or "DELETE" &&
+        (context.Request.Path.StartsWithSegments("/api/v1/community") ||
+         context.Request.Method == "POST" && context.Request.Path.Value is "/api/v1/auth/register" or "/api/v1/auth/login" or "/api/v1/auth/logout");
+    if (context.Request.Method is not ("GET" or "HEAD") && !allowedMutation)
     {
         context.Response.Headers.Allow = context.Request.Path.StartsWithSegments("/api/v1/auth") ? "POST" : "GET, HEAD";
         await Results.Problem(statusCode: 405, title: "Неподдържан метод",
@@ -119,13 +124,13 @@ app.Use(async (context, next) =>
     }
     await next();
 });
-app.UseRateLimiter();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapGet("/health/live", () => Results.Ok(new { status = "live" }));
-app.MapGet("/health/ready", (SnapshotRepository snapshots, AccountRepository accounts) =>
-    snapshots.IsReady() && accounts.IsReady() && durableAccounts
+app.MapGet("/health/ready", (SnapshotRepository snapshots, AccountRepository accounts, CommunityRepository community) =>
+    snapshots.IsReady() && accounts.IsReady() && community.IsReady() && durableAccounts
         ? Results.Ok(new { status = "ready" })
         : Results.Problem(statusCode: 503, title: "Услугата не е готова",
             extensions: new Dictionary<string, object?> { ["code"] = durableAccounts ? "storage_unavailable" : "account_storage_not_durable" }));
@@ -214,6 +219,73 @@ auth.MapPost("/logout", async (HttpContext http, IAntiforgery antiforgery) =>
     return Results.Ok(new SessionResponse(false, null));
 });
 
+var community = api.MapGroup("/community");
+community.MapGet("/feed", (HttpContext http, CommunityRepository repository) =>
+{
+    if (!TryPositiveInt(http.Request.Query["page"], 1, 1, 100000, out var page) ||
+        !TryPositiveInt(http.Request.Query["pageSize"], 20, 1, 50, out var pageSize))
+        return Invalid(http, "invalid_pagination", "Страницата или размерът са невалидни.");
+    NoStore(http);
+    return Results.Ok(repository.GetFeed(CurrentAccountId(http), page, pageSize));
+});
+community.MapGet("/users/{username}", (string username, HttpContext http, CommunityRepository repository) =>
+{
+    if (!TryPositiveInt(http.Request.Query["page"], 1, 1, 100000, out var page))
+        return Invalid(http, "invalid_pagination", "Страницата е невалидна.");
+    var profile = repository.GetProfile(username, CurrentAccountId(http), page, 20); NoStore(http);
+    return profile is null ? Missing(http, "user_not_found", "Потребителят не е намерен.") : Results.Ok(profile);
+});
+community.MapGet("/posts/{postId:guid}", (Guid postId, HttpContext http, CommunityRepository repository) =>
+{
+    if (!TryPositiveInt(http.Request.Query["commentPage"], 1, 1, 100000, out var commentPage) ||
+        !TryPositiveInt(http.Request.Query["commentPageSize"], 50, 1, 100, out var commentPageSize))
+        return Invalid(http, "invalid_pagination", "Страницата с коментари е невалидна.");
+    var post = repository.GetPost(postId, commentPage, commentPageSize); NoStore(http);
+    return post is null ? Missing(http, "post_not_found", "Публикацията не е намерена.") : Results.Ok(post);
+});
+community.MapPost("/posts", async (CreatePostRequest request, HttpContext http, IAntiforgery antiforgery,
+    AccountRepository accounts, CommunityRepository repository, SnapshotRepository snapshots) =>
+{
+    if (!await ValidateAntiforgery(http, antiforgery)) return Csrf(http);
+    var account = CurrentAccount(http, accounts); if (account is null) return Unauthorized(http);
+    var body = request.Body?.Trim() ?? ""; var eik = request.SupplierEik?.Trim() ?? ""; var key = request.SignalKey?.Trim() ?? "";
+    if (body.Length is < 1 or > 1200) return Invalid(http, "invalid_post", "Текстът трябва да бъде между 1 и 1200 знака.");
+    var signal = snapshots.GetSignal(eik, key);
+    if (signal is null) return Missing(http, "signal_not_found", "Сигналът не е намерен в текущата снимка.");
+    var post = repository.CreatePost(account.Id, eik, key, signal.Name, body);
+    if (post is null) return Results.Problem(statusCode: 409, title: "Публикацията вече съществува",
+        extensions: new Dictionary<string, object?> { ["code"] = "duplicate_post", ["traceId"] = http.TraceIdentifier });
+    NoStore(http); return Results.Json(post, statusCode: StatusCodes.Status201Created);
+}).RequireRateLimiting("community");
+community.MapPost("/posts/{postId:guid}/comments", async (Guid postId, TextRequest request, HttpContext http,
+    IAntiforgery antiforgery, AccountRepository accounts, CommunityRepository repository) =>
+{
+    if (!await ValidateAntiforgery(http, antiforgery)) return Csrf(http);
+    var account = CurrentAccount(http, accounts); if (account is null) return Unauthorized(http);
+    var body = request.Body?.Trim() ?? "";
+    if (body.Length is < 1 or > 1000) return Invalid(http, "invalid_comment", "Коментарът трябва да бъде между 1 и 1000 знака.");
+    var comment = repository.AddComment(postId, account.Id, body);
+    if (comment is null) return Missing(http, "post_not_found", "Публикацията не е намерена.");
+    NoStore(http); return Results.Json(comment, statusCode: StatusCodes.Status201Created);
+}).RequireRateLimiting("community");
+community.MapPost("/users/{username}/follow", async (string username, HttpContext http, IAntiforgery antiforgery,
+    AccountRepository accounts, CommunityRepository repository) =>
+{
+    if (!await ValidateAntiforgery(http, antiforgery)) return Csrf(http);
+    var viewer = CurrentAccount(http, accounts); if (viewer is null) return Unauthorized(http);
+    var target = accounts.FindByUsername(username); if (target is null) return Missing(http, "user_not_found", "Потребителят не е намерен.");
+    if (target.Id == viewer.Id) return Invalid(http, "self_follow", "Не можете да следвате собствения си профил.");
+    repository.Follow(viewer.Id, target.Id); NoStore(http); return Results.Ok(new { following = true });
+}).RequireRateLimiting("community");
+community.MapDelete("/users/{username}/follow", async (string username, HttpContext http, IAntiforgery antiforgery,
+    AccountRepository accounts, CommunityRepository repository) =>
+{
+    if (!await ValidateAntiforgery(http, antiforgery)) return Csrf(http);
+    var viewer = CurrentAccount(http, accounts); if (viewer is null) return Unauthorized(http);
+    var target = accounts.FindByUsername(username); if (target is null) return Missing(http, "user_not_found", "Потребителят не е намерен.");
+    repository.Unfollow(viewer.Id, target.Id); NoStore(http); return Results.Ok(new { following = false });
+}).RequireRateLimiting("community");
+
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.MapFallbackToFile("index.html");
@@ -228,6 +300,13 @@ static async Task SignIn(HttpContext http, Account account)
     await http.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity),
         new AuthenticationProperties { IsPersistent = true, ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7), AllowRefresh = true });
 }
+
+static Guid? CurrentAccountId(HttpContext http) =>
+    Guid.TryParse(http.User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
+static Account? CurrentAccount(HttpContext http, AccountRepository accounts) =>
+    CurrentAccountId(http) is { } id ? accounts.FindById(id) : null;
+static IResult Unauthorized(HttpContext http) => Results.Problem(statusCode: 401, title: "Необходим е вход",
+    extensions: new Dictionary<string, object?> { ["code"] = "authentication_required", ["traceId"] = http.TraceIdentifier });
 
 static async Task<bool> ValidateAntiforgery(HttpContext http, IAntiforgery antiforgery)
 {
@@ -287,5 +366,7 @@ static IResult Missing(HttpContext http, string code, string detail) => Results.
 
 public sealed record AuthRequest(string? Username, string? Password);
 public sealed record SessionResponse(bool Authenticated, string? Username);
+public sealed record CreatePostRequest(string? SupplierEik, string? SignalKey, string? Body);
+public sealed record TextRequest(string? Body);
 public static class Eik { public static bool IsValid(string value) => value.Length is 9 or 13 && value.All(char.IsDigit); }
 public partial class Program { }

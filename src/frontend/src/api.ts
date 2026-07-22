@@ -25,3 +25,10 @@ export async function postJson<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body)
   }));
 }
+
+export async function deleteJson<T>(path: string): Promise<T> {
+  const { token } = await getJson<{ token: string }>('/api/v1/auth/csrf');
+  return parse<T>(await fetch(path, {
+    method: 'DELETE', credentials: 'same-origin', headers: { 'X-CSRF-TOKEN': token }
+  }));
+}

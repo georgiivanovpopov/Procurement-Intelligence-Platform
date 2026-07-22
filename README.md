@@ -67,6 +67,16 @@ without that explicit durability assertion, preventing a deployment that would
 silently lose accounts after a restart. Attaching paid storage and changing the
 production service remain human-approved deployment actions.
 
+## Community feed
+
+Authenticated users can share an existing supplier signal with a public
+opinion, follow other profiles, and comment on posts. Community records store
+only canonical EIK and signal keys in the durable account database;
+procurement evidence remains immutable. `/feed`, `/users/{username}`, and
+`/posts/{id}` are publicly readable. All community mutations require a valid
+session, a fresh antiforgery token, and pass a separate rate limit. Post text is
+limited to 1200 characters and comment text to 1000 characters.
+
 ## Historical refresh (2020 onward)
 
 Acquisition and ingestion are intentionally separate. First build the current OCDS snapshot. The acquisition script then downloads the 20 pinned official CSV resources for 2020–2025 and checksum-binds both those files and the current snapshot into one local manifest. Raw files and working databases are ignored by Git.
