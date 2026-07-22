@@ -23,6 +23,11 @@ Start the API on the port expected by the frontend:
 dotnet run --project src/backend/TenderLens.Api --no-launch-profile --urls http://localhost:5080
 ```
 
+Local accounts are stored separately from the immutable procurement snapshot at
+`src/backend/TenderLens.Api/data/accounts.db` by default. Override the location
+with `AccountDbPath`. Registration uses a 3–32 character username containing
+Latin letters, numbers or underscores and a 12–128 character password.
+
 In a second terminal:
 
 ```powershell
@@ -49,7 +54,18 @@ pnpm run build
 
 ## Deployment
 
-The included `Dockerfile` builds the frontend, expands the validated immutable historical snapshot, publishes the ASP.NET Core API, and serves the React application from one container. `render.yaml` targets Render's free web-service plan. The snapshot is refreshed by running the importer outside Render because the official portal rejects requests from some cloud build IPs.
+The included `Dockerfile` builds the frontend, expands the validated immutable historical snapshot, publishes the ASP.NET Core API, and serves the React application from one container. `render.yaml` targets Render's Standard web-service plan. The snapshot is refreshed by running the importer outside Render because the official portal rejects requests from some cloud build IPs.
+
+User accounts require durable writable storage. The container defaults to
+`/app/data/accounts.db`, but that path is ephemeral until a Render persistent
+disk is attached. Before deploying authentication, mount a disk at `/var/data`,
+set `AccountDbPath=/var/data/accounts.db`, and set
+`AccountStorageDurable=true`. Authentication encryption keys are persisted in
+`/var/data/accounts.db.keys` so sessions survive container replacement.
+Production readiness deliberately returns 503
+without that explicit durability assertion, preventing a deployment that would
+silently lose accounts after a restart. Attaching paid storage and changing the
+production service remain human-approved deployment actions.
 
 ## Historical refresh (2020 onward)
 

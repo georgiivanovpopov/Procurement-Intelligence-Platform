@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, getJson } from './api';
+import { ApiError, getJson, postJson } from './api';
 
 describe('getJson', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -19,5 +19,25 @@ describe('getJson', () => {
       expect((error as ApiError).status).toBe(404);
       expect((error as ApiError).detail).toContain('няма доставчик');
     }
+  });
+});
+
+describe('postJson', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('fetches an antiforgery token and sends it with same-origin credentials', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: 'csrf-token' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ authenticated: true, username: 'auditor' }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await postJson('/api/v1/auth/login', { username: 'auditor', password: 'a long passphrase' });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/v1/auth/csrf', expect.objectContaining({ credentials: 'same-origin' }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/v1/auth/login', expect.objectContaining({
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: expect.objectContaining({ 'X-CSRF-TOKEN': 'csrf-token' })
+    }));
   });
 });

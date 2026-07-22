@@ -5,3 +5,6 @@ services:
     plan: standard
     healthCheckPath: /health/ready
     autoDeploy: true
+    # Before deploying accounts, attach a persistent disk and set:
+    # AccountDbPath=/var/data/accounts.db
+    # AccountStorageDurable=true

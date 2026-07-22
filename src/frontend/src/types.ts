@@ -7,3 +7,4 @@ export type Evidence={recordId:string;buyer:string;subject:string;cpv:string;awa
 export type Detail={key:string;name:string;status:string;observedFact:string;trigger:string;formula:string;threshold:string;peerDefinition:string;peerSize:number|null;observationWindow:string;limitations:string;version:string;evidence:Evidence[];evidenceTotal:number;page:number;pageSize:number;totalPages:number};
 export type Field={label:string;sourceValue:string|null;tenderLensUse:string;state:string};
 export type RecordView={recordId:string;supplierEik:string;buyer:string;subject:string;cpv:string;awardDate:string;originalValue:Money;publicUrl:string|null;fields:Field[];amendments:{id:string;date:string;description:string;valueDelta:Money|null}[]};
+export type Session={authenticated:boolean;username:string|null};
